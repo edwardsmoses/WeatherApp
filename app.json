@@ -1,7 +1,8 @@
 {
   "expo": {
+    "owner": "edmiccky",
     "name": "WeatherApp",
-    "slug": "WeatherApp",
+    "slug": "edmiccky-weather-app",
     "platforms": [
       "ios",
       "android",
@@ -23,6 +24,10 @@
     ],
     "ios": {
       "supportsTablet": true
+    },
+    "android": {
+      "package": "com.edwards.weatherapp",
+      "versionCode": 1.0
     }
   }
 }
