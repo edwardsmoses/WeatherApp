@@ -1,7 +1,17 @@
-import React, { Fragment } from 'react';
+import React, { Fragment, useState } from 'react';
 import { StyleSheet, TextInput } from 'react-native';
 
-export default function SearchInput({ placeholder }) {
+export default function SearchInput({ placeholder, onSubmit }) {
+
+    const [location, setLocation] = useState('');
+
+    const handleSubmitEdit = () => {
+        if (!location) return;
+
+        onSubmit(location);
+        setLocation('');
+    }
+
     return (
         <Fragment>
             <TextInput
@@ -10,6 +20,8 @@ export default function SearchInput({ placeholder }) {
                 placeholderTextColor="white"
                 underlineColorAndroid="transparent"
                 style={styles.textInput}
+                onSubmitEditing={handleSubmitEdit}
+                onChangeText={location => setLocation(location)}
                 clearButtonMode="always"
             />
         </Fragment>

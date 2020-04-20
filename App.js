@@ -1,21 +1,98 @@
-import React from 'react';
-import { StyleSheet, Text, Platform, KeyboardAvoidingView, ImageBackground } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import {
+  StyleSheet,
+  Text,
+  View,
+  Platform,
+  KeyboardAvoidingView,
+  ImageBackground,
+  ActivityIndicator,
+  StatusBar
+} from 'react-native';
 
+
+import { fetchLocationId, fetchWeather } from './utils/api';
 import getImageForWeather from './utils/getImageForWeather';
-import SearchInput from './components/SearchInput'
+import SearchInput from './components/SearchInput';
 
 export default function App() {
+
+  const initAppState = {
+    loading: false,
+    error: false,
+    location: '',
+    temperature: 0,
+    weather: 0
+  };
+
+  const [appState, setAppState] = useState(initAppState);
+
+  useEffect(() => {
+    handleUpdateLocation('Lagos');
+  }, [handleUpdateLocation]);
+
+  const handleUpdateLocation = (city) => {
+    if (!city) return;
+
+    setAppState({ ...appState, loading: true });
+
+    try {
+      (async () => {
+        const locationId = await fetchLocationId(city);
+
+        //if no location id found. 
+        if (!locationId) {
+          setAppState({ ...appState, loading: false, error: true });
+          return;
+        }
+
+        const { location, weather, temperature } = await fetchWeather(locationId);
+
+        setAppState({ ...appState, loading: false, error: false, location, weather, temperature });
+      })();
+    }
+    catch (error) {
+      setAppState({ ...appState, loading: false, error: true });
+    }
+  }
+
   return (
     <KeyboardAvoidingView behavior="padding" style={styles.container}>
-      <ImageBackground source={getImageForWeather('Clear')} style={styles.imageContainer}
+      <StatusBar barStyle="light-content" />
+      <ImageBackground source={getImageForWeather(appState.weather)} style={styles.imageContainer}
         imageStyle={styles.image}>
 
         <View style={styles.detailsContainer}>
-          <Text style={[styles.largeText, styles.textStyle]}>San Francisco</Text>
-          <Text style={[styles.smallText, styles.textStyle]}>Light Cloud</Text>
-          <Text style={[styles.largeText, styles.textStyle]}>24°</Text>
+          <ActivityIndicator animating={appState.loading} color="white" size="large" />
 
-          <SearchInput placeholder="Search any city"></SearchInput>
+
+          {!appState.loading && appState.error && (
+            <View>
+              <Text style={[styles.largeText, styles.textStyle]}>
+                Uh-oh! Could not find the Weather.
+              </Text>
+              <Text style={[styles.smallText, styles.textStyle]}>
+                You could try searching the weather for a different city.
+                </Text>
+            </View>
+          )}
+
+
+          {!appState.error && (
+            <View>
+              <Text style={[styles.largeText, styles.textStyle]}>
+                {appState.location}
+              </Text>
+              <Text style={[styles.smallText, styles.textStyle]}>
+                {appState.weather}
+              </Text>
+              <Text style={[styles.largeText, styles.textStyle]}>
+                {`${Math.round(appState.temperature)}°`}
+              </Text>
+            </View>
+          )}
+
+          <SearchInput placeholder="Search any city" onSubmit={handleUpdateLocation}></SearchInput>
         </View>
       </ImageBackground>
 
@@ -26,9 +103,7 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: '#34495E'
   },
   imageContainer: {
     flex: 1,
@@ -42,7 +117,7 @@ const styles = StyleSheet.create({
   detailsContainer: {
     flex: 1,
     justifyContent: 'center',
-    backgroundColor: 'rgba(0,0,0,0.2)',
+    backgroundColor: 'rgba(0,0,0,0.3)',
     paddingHorizontal: 20,
   },
   textStyle: {
